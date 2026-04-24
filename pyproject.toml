@@ -7,10 +7,9 @@ requires-python = ">=3.10"
 authors = [
     {name = "Siddharth Ahuja", email = "ahujasid@gmail.com"}
 ]
-license = {text = "MIT"}
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -25,7 +24,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["MCP_Server", "MCP_Server.connection", "MCP_Server.session_helpers", "MCP_Server.track_helpers", "MCP_Server.clip_helpers", "MCP_Server.browser_helpers"]
+packages = ["MCP_Server"]
 
 [project.urls]
 "Homepage" = "https://github.com/ahujasid/ableton-mcp"
