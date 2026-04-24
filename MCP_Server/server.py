@@ -110,6 +110,54 @@ def get_session_info(ctx: Context) -> str:
 
 
 @mcp.tool()
+def get_full_session_state(ctx: Context) -> str:
+    """Get a compact, structured overview of the current Ableton session.
+    
+    Returns session metadata, tracks, clip slots, clips, and devices in a single call.
+    This is optimized for LLM introspection before performing further automation.
+    
+    Note: This first version does NOT include MIDI note data or full device parameter trees.
+    """
+    try:
+        ableton = get_ableton_connection()
+        result = ableton.send_command("get_full_session_state")
+        
+        if result.get("ok"):
+            return json.dumps(result, indent=2)
+        else:
+            error_info = result.get("error", {})
+            return json.dumps({
+                "ok": False,
+                "error": {
+                    "code": error_info.get("code", "SESSION_STATE_FAILED"),
+                    "message": error_info.get("message", "Failed to get session state"),
+                    "hint": "Make sure Ableton is running and the Remote Script is loaded"
+                }
+            }, indent=2)
+    except Exception as e:
+        error_msg = str(e)
+        if "refused" in error_msg.lower() or "connection refused" in error_msg.lower():
+            return json.dumps({
+                "ok": False,
+                "error": {
+                    "code": "ableton_not_running",
+                    "message": "Ableton is not reachable. Make sure Ableton is running and the Remote Script is loaded.",
+                    "hint": "Check Preferences > Link, Tempo & MIDI in Ableton"
+                }
+            }, indent=2)
+        else:
+            logger.error(f"Error getting full session state: {error_msg}")
+            return json.dumps({
+                "ok": False,
+                "error": {
+                    "code": "SESSION_STATE_COLLECTION_FAILED",
+                    "message": "Failed to collect session state",
+                    "details": error_msg
+                }
+            }, indent=2)
+
+
+@mcp.tool()
 def set_tempo(ctx: Context, tempo: float) -> str:
     """Set the tempo of the Ableton session.
     

@@ -114,6 +114,7 @@ opencode mcp list
 ### Session
 
 - `get_session_info` – Get session metadata (tempo, time signature, track count)
+- `get_full_session_state` – Get compact overview of session (tracks, clips, devices) optimized for LLM introspection
 - `set_tempo` – Set tempo in BPM
 
 ### Track
@@ -148,9 +149,14 @@ Try these prompts in Opencode:
 
 ```
 Get information about the current Ableton session
+Get a full overview of the current session
 Create a new MIDI track
 Set the tempo to 120 BPM
 ```
+
+## Limitations
+
+- `get_full_session_state` does not include MIDI note data or full device parameter trees
 
 ## Troubleshooting
 
@@ -180,6 +186,7 @@ Set the tempo to 120 BPM
 - Both components must run on the same machine
 - Ableton Live must be running when MCP Server connects
 - Script reload requires restarting Ableton
+- `get_full_session_state` does not include MIDI note data or full device parameter trees (v1.0)
 
 ## License
 

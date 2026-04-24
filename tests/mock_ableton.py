@@ -168,6 +168,72 @@ class MockAbletonServer:
             "load_browser_item": {
                 "status": "ok",
                 "result": {"loaded": True, "new_devices": ["Test Device"]}
+            },
+            "get_full_session_state": {
+                "status": "ok",
+                "result": {
+                    "ok": True,
+                    "session": {
+                        "tempo": 120.0,
+                        "track_count": 2
+                    },
+                    "tracks": [
+                        {
+                            "index": 0,
+                            "name": "Drums",
+                            "type": "midi",
+                            "is_foldable": False,
+                            "has_midi_input": True,
+                            "has_audio_input": False,
+                            "clip_slots": [
+                                {
+                                    "index": 0,
+                                    "has_clip": True,
+                                    "clip": {
+                                        "name": "Amen Loop",
+                                        "is_audio_clip": False,
+                                        "is_midi_clip": True,
+                                        "length": 4.0,
+                                        "is_playing": False,
+                                        "is_recording": False
+                                    }
+                                }
+                            ],
+                            "devices": [
+                                {
+                                    "index": 0,
+                                    "name": "Drum Rack",
+                                    "class_name": "DrumGroupDevice",
+                                    "type": "drum_machine",
+                                    "is_active": True
+                                }
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "name": "Bass",
+                            "type": "midi",
+                            "is_foldable": False,
+                            "has_midi_input": True,
+                            "has_audio_input": False,
+                            "clip_slots": [
+                                {
+                                    "index": 0,
+                                    "has_clip": False
+                                }
+                            ],
+                            "devices": [
+                                {
+                                    "index": 0,
+                                    "name": "Analog",
+                                    "class_name": "OriginalSimpler",
+                                    "type": "instrument",
+                                    "is_active": True
+                                }
+                            ]
+                        }
+                    ]
+                }
             }
         }
 

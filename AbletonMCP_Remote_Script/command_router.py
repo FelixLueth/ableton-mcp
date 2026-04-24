@@ -23,6 +23,7 @@ class CommandRouter(object):
 
         self._commands = {
             "get_session_info": self._handle_get_session_info,
+            "get_full_session_state": self._handle_get_full_session_state,
             "get_track_info": self._handle_get_track_info,
             "create_midi_track": self._handle_create_midi_track,
             "set_track_name": self._handle_set_track_name,
@@ -93,6 +94,9 @@ class CommandRouter(object):
 
     def _handle_get_session_info(self, params):
         return self._session.get_session_info()
+
+    def _handle_get_full_session_state(self, params):
+        return self._session.get_full_session_state()
 
     def _handle_get_track_info(self, params):
         track_index = params.get("track_index", 0)
