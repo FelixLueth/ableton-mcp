@@ -3,24 +3,20 @@
 # This module provides the MCP server interface for Ableton Live.
 # It exposes tools for session, track, clip, browser, and transport control.
 
-from mcp.server.fastmcp import FastMCP, Context
+import json
+import logging
+
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, Any
-import logging
-import json
-import socket
+
+from mcp.server.fastmcp import FastMCP, Context
+
+from MCP_Server.connection import get_ableton_connection, _ableton_connection
+from MCP_Server import clip_helpers
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("AbletonMCPServer")
-
-from MCP_Server.connection import get_ableton_connection, _ableton_connection
-
-# Import helper modules
-from MCP_Server import session_helpers
-from MCP_Server import track_helpers
-from MCP_Server import clip_helpers
-from MCP_Server import browser_helpers
 
 
 # =============================================================================
@@ -40,28 +36,28 @@ class PortUnavailableError(Exception):
 def _handle_connection_error(e: Exception) -> str:
     """Handle connection errors with structured messages"""
     error_msg = str(e)
-    
+
     if "refused" in error_msg.lower() or "connection refused" in error_msg.lower():
         return json.dumps({
             "error": "ableton_not_running",
             "message": "Could not connect to Ableton Live. Ensure Ableton is running with the Remote Script loaded.",
             "hint": "Check Preferences > Link, Tempo & MIDI in Ableton"
         })
-    
+
     if "timeout" in error_msg.lower():
         return json.dumps({
             "error": "timeout",
             "message": "Connection to Ableton timed out.",
             "hint": "Try again or restart Ableton"
         })
-    
+
     if "address already in use" in error_msg.lower():
         return json.dumps({
             "error": "port_unavailable",
             "message": "Port 9877 is already in use.",
             "hint": "Check if another instance is running or kill the process using the port"
         })
-    
+
     return json.dumps({
         "error": "connection_error",
         "message": f"Connection error: {error_msg}"
@@ -73,14 +69,14 @@ async def server_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
     """Manage server startup and shutdown lifecycle"""
     try:
         logger.info("AbletonMCP server starting up")
-        
+
         try:
-            ableton = get_ableton_connection()
+            _ = get_ableton_connection()
             logger.info("Successfully connected to Ableton on startup")
         except Exception as e:
             logger.warning(f"Could not connect to Ableton on startup: {str(e)}")
             logger.warning("Make sure the Ableton Remote Script is running")
-        
+
         yield {}
     finally:
         global _ableton_connection
@@ -122,7 +118,7 @@ def set_tempo(ctx: Context, tempo: float) -> str:
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("set_tempo", {"tempo": tempo})
+        ableton.send_command("set_tempo", {"tempo": tempo})
         return f"Set tempo to {tempo} BPM"
     except Exception as e:
         logger.error(f"Error setting tempo: {str(e)}")
@@ -197,9 +193,9 @@ def create_clip(ctx: Context, track_index: int, clip_index: int, length: float =
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("create_clip", {
-            "track_index": track_index, 
-            "clip_index": clip_index, 
+        ableton.send_command("create_clip", {
+            "track_index": track_index,
+            "clip_index": clip_index,
             "length": length
         })
         return f"Created new clip at track {track_index}, slot {clip_index} with length {length} beats"
@@ -210,9 +206,9 @@ def create_clip(ctx: Context, track_index: int, clip_index: int, length: float =
 
 @mcp.tool()
 def add_notes_to_clip(
-    ctx: Context, 
-    track_index: int, 
-    clip_index: int, 
+    ctx: Context,
+    track_index: int,
+    clip_index: int,
     notes: list
 ) -> str:
     """Add MIDI notes to a clip.
@@ -224,7 +220,7 @@ def add_notes_to_clip(
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("add_notes_to_clip", {
+        _ = ableton.send_command("add_notes_to_clip", {
             "track_index": track_index,
             "clip_index": clip_index,
             "notes": notes
@@ -246,7 +242,7 @@ def set_clip_name(ctx: Context, track_index: int, clip_index: int, name: str) ->
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("set_clip_name", {
+        ableton.send_command("set_clip_name", {
             "track_index": track_index,
             "clip_index": clip_index,
             "name": name
@@ -267,7 +263,7 @@ def fire_clip(ctx: Context, track_index: int, clip_index: int) -> str:
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("fire_clip", {
+        ableton.send_command("fire_clip", {
             "track_index": track_index,
             "clip_index": clip_index
         })
@@ -287,7 +283,7 @@ def stop_clip(ctx: Context, track_index: int, clip_index: int) -> str:
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("stop_clip", {
+        ableton.send_command("stop_clip", {
             "track_index": track_index,
             "clip_index": clip_index
         })
@@ -306,7 +302,7 @@ def start_playback(ctx: Context) -> str:
     """Start playing the Ableton session."""
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("start_playback")
+        _ = ableton.send_command("start_playback")
         return "Started playback"
     except Exception as e:
         logger.error(f"Error starting playback: {str(e)}")
@@ -318,7 +314,7 @@ def stop_playback(ctx: Context) -> str:
     """Stop playing the Ableton session."""
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("stop_playback")
+        _ = ableton.send_command("stop_playback")
         return "Stopped playback"
     except Exception as e:
         logger.error(f"Error stopping playback: {str(e)}")
@@ -341,15 +337,15 @@ def get_browser_tree(ctx: Context, category_type: str = "all") -> str:
         result = ableton.send_command("get_browser_tree", {
             "category_type": category_type
         })
-        
+
         if "available_categories" in result and len(result.get("categories", [])) == 0:
             available_cats = result.get("available_categories", [])
             return (f"No categories found for '{category_type}'. "
                    f"Available browser categories: {', '.join(available_cats)}")
-        
+
         total_folders = result.get("total_folders", 0)
         formatted_output = f"Browser tree for '{category_type}' (showing {total_folders} folders):\n\n"
-        
+
         def format_tree(item, indent=0):
             output = ""
             if item:
@@ -357,31 +353,31 @@ def get_browser_tree(ctx: Context, category_type: str = "all") -> str:
                 name = item.get("name", "Unknown")
                 path = item.get("path", "")
                 has_more = item.get("has_more", False)
-                
+
                 output += f"{prefix}* {name}"
                 if path:
                     output += f" (path: {path})"
                 if has_more:
                     output += " [...]"
                 output += "\n"
-                
+
                 for child in item.get("children", []):
                     output += format_tree(child, indent + 1)
             return output
-        
+
         for category in result.get("categories", []):
             formatted_output += format_tree(category)
             formatted_output += "\n"
-        
+
         return formatted_output
     except Exception as e:
         error_msg = str(e)
         if "Browser is not available" in error_msg:
             logger.error(f"Browser is not available in Ableton: {error_msg}")
-            return f"Error: The Ableton browser is not available. Make sure Ableton Live is fully loaded and try again."
+            return "Error: The Ableton browser is not available. Make sure Ableton Live is fully loaded and try again."
         elif "Could not access Live application" in error_msg:
             logger.error(f"Could not access Live application: {error_msg}")
-            return f"Error: Could not access the Ableton Live application. Make sure Ableton Live is running and the Remote Script is loaded."
+            return "Error: Could not access the Ableton Live application. Make sure Ableton Live is running and the Remote Script is loaded."
         else:
             logger.error(f"Error getting browser tree: {error_msg}")
             return f"Error getting browser tree: {error_msg}"
@@ -400,22 +396,22 @@ def get_browser_items_at_path(ctx: Context, path: str) -> str:
         result = ableton.send_command("get_browser_items_at_path", {
             "path": path
         })
-        
+
         if "error" in result and "available_categories" in result:
             error = result.get("error", "")
             available_cats = result.get("available_categories", [])
             return (f"Error: {error}\n"
                    f"Available browser categories: {', '.join(available_cats)}")
-        
+
         return json.dumps(result, indent=2)
     except Exception as e:
         error_msg = str(e)
         if "Browser is not available" in error_msg:
             logger.error(f"Browser is not available in Ableton: {error_msg}")
-            return f"Error: The Ableton browser is not available. Make sure Ableton Live is fully loaded and try again."
+            return "Error: The Ableton browser is not available. Make sure Ableton Live is fully loaded and try again."
         elif "Could not access Live application" in error_msg:
             logger.error(f"Could not access Live application: {error_msg}")
-            return f"Error: Could not access the Ableton Live application. Make sure Ableton Live is running and the Remote Script is loaded."
+            return "Error: Could not access the Ableton Live application. Make sure Ableton Live is running and the Remote Script is loaded."
         elif "Unknown or unavailable category" in error_msg:
             logger.error(f"Invalid browser category: {error_msg}")
             return f"Error: {error_msg}. Please check the available categories using get_browser_tree."
@@ -437,17 +433,17 @@ def load_instrument_or_effect(ctx: Context, track_index: int, uri: str) -> str:
     """
     try:
         ableton = get_ableton_connection()
-        result = ableton.send_command("load_browser_item", {
+        _result = ableton.send_command("load_browser_item", {
             "track_index": track_index,
             "item_uri": uri
         })
-        
-        if result.get("loaded", False):
-            new_devices = result.get("new_devices", [])
+
+        if _result.get("loaded", False):
+            new_devices = _result.get("new_devices", [])
             if new_devices:
                 return f"Loaded instrument with URI '{uri}' on track {track_index}. New devices: {', '.join(new_devices)}"
             else:
-                devices = result.get("devices_after", [])
+                devices = _result.get("devices_after", [])
                 return f"Loaded instrument with URI '{uri}' on track {track_index}. Devices on track: {', '.join(devices)}"
         else:
             return f"Failed to load instrument with URI '{uri}'"
@@ -467,34 +463,34 @@ def load_drum_kit(ctx: Context, track_index: int, rack_uri: str, kit_path: str) 
     """
     try:
         ableton = get_ableton_connection()
-        
-        result = ableton.send_command("load_browser_item", {
+
+        _rack_result = ableton.send_command("load_browser_item", {
             "track_index": track_index,
             "item_uri": rack_uri
         })
-        
-        if not result.get("loaded", False):
+
+        if not _rack_result.get("loaded", False):
             return f"Failed to load drum rack with URI '{rack_uri}'"
-        
+
         kit_result = ableton.send_command("get_browser_items_at_path", {
             "path": kit_path
         })
-        
+
         if "error" in kit_result:
             return f"Loaded drum rack but failed to find drum kit: {kit_result.get('error')}"
-        
+
         kit_items = kit_result.get("items", [])
         loadable_kits = [item for item in kit_items if item.get("is_loadable", False)]
-        
+
         if not loadable_kits:
             return f"Loaded drum rack but no loadable drum kits found at '{kit_path}'"
-        
+
         kit_uri = loadable_kits[0].get("uri")
-        load_result = ableton.send_command("load_browser_item", {
+        _ = ableton.send_command("load_browser_item", {
             "track_index": track_index,
             "item_uri": kit_uri
         })
-        
+
         return f"Loaded drum rack and kit '{loadable_kits[0].get('name')}' on track {track_index}"
     except Exception as e:
         logger.error(f"Error loading drum kit: {str(e)}")
@@ -534,28 +530,28 @@ def create_drum_loop(
     """
     try:
         ableton = get_ableton_connection()
-        
+
         notes = clip_helpers.create_drum_pattern(pattern, tempo)
-        
+
         if not notes:
             return f"Error: No notes generated from pattern '{pattern}'"
-        
+
         valid, error = clip_helpers.validate_notes(notes)
         if not valid:
             return f"Error: Invalid notes: {error}"
-        
-        result = ableton.send_command("create_clip", {
+
+        _ = ableton.send_command("create_clip", {
             "track_index": track_index,
             "clip_index": clip_index,
             "length": length
         })
-        
+
         ableton.send_command("add_notes_to_clip", {
             "track_index": track_index,
             "clip_index": clip_index,
             "notes": notes
         })
-        
+
         return f"Created drum loop with {len(notes)} notes on track {track_index}, clip {clip_index}"
     except Exception as e:
         logger.error(f"Error creating drum loop: {str(e)}")
@@ -575,7 +571,7 @@ def list_tracks(ctx: Context) -> str:
     try:
         ableton = get_ableton_connection()
         result = ableton.send_command("get_session_info")
-        
+
         tracks = result.get("tracks", [])
         track_list = []
         for i, track in enumerate(tracks):
@@ -587,7 +583,7 @@ def list_tracks(ctx: Context) -> str:
                 "soloed": track.get("soloed", False),
                 "armed": track.get("armed", False)
             })
-        
+
         return json.dumps({"tracks": track_list, "count": len(track_list)}, indent=2)
     except Exception as e:
         logger.error(f"Error listing tracks: {str(e)}")
@@ -604,7 +600,7 @@ def list_clips(ctx: Context, track_index: int) -> str:
     try:
         ableton = get_ableton_connection()
         result = ableton.send_command("get_track_info", {"track_index": track_index})
-        
+
         clip_slots = result.get("clip_slots", [])
         clips = []
         for i, slot in enumerate(clip_slots):
@@ -615,7 +611,7 @@ def list_clips(ctx: Context, track_index: int) -> str:
                     "playing": slot.get("is_playing", False),
                     "looping": slot.get("is_looping", False)
                 })
-        
+
         return json.dumps({"track_index": track_index, "clips": clips, "count": len(clips)}, indent=2)
     except Exception as e:
         logger.error(f"Error listing clips: {str(e)}")

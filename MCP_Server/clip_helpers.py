@@ -10,20 +10,20 @@ def validate_notes(notes: List[Dict[str, Any]]) -> Tuple[bool, str]:
     for note in notes:
         if not isinstance(note, dict):
             return (False, "Each note must be a dictionary")
-        
+
         required_fields = ["pitch", "start_time", "duration"]
         for field in required_fields:
             if field not in note:
                 return (False, f"Note missing required field: {field}")
-        
+
         pitch = note.get("pitch", 0)
         if not isinstance(pitch, int) or pitch < 0 or pitch > 127:
             return (False, f"Invalid pitch: {pitch} (must be 0-127)")
-        
+
         velocity = note.get("velocity", 100)
         if not isinstance(velocity, int) or velocity < 0 or velocity > 127:
             return (False, f"Invalid velocity: {velocity} (must be 0-127)")
-    
+
     return (True, "")
 
 
@@ -61,22 +61,22 @@ def create_drum_pattern(
     """
     notes = []
     step_duration = 1.0 / steps_per_beat
-    
+
     pattern_lower = pattern.lower().strip()
     channels = pattern_lower.split("|")
-    
+
     note_map = {
         0: DRUM_NOTES["kick"],
         1: DRUM_NOTES["snare"],
         2: DRUM_NOTES["hihat_closed"],
     }
-    
+
     for channel_idx, channel_pattern in enumerate(channels):
         if channel_idx not in note_map:
             break
-            
+
         pitch = note_map[channel_idx]
-        
+
         for step_idx, char in enumerate(channel_pattern):
             if char.strip() and char != ".":
                 notes.append({
@@ -86,5 +86,5 @@ def create_drum_pattern(
                     "velocity": 100,
                     "mute": False
                 })
-    
+
     return notes

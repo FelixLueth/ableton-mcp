@@ -2,21 +2,39 @@
 
 ## Overview
 
-The repository does not currently include a formal test suite.
+The repository includes a unit test suite that can run without Ableton Live installed.
+
+## Running Tests Locally
+
+```bash
+# Install dependencies first
+pip install -e .
+
+# Run tests
+python -m unittest discover -s tests -v
+```
+
+## CI/CD
+
+Tests run automatically on GitHub Actions for every pull request and push to `main`/`develop` branches.
+
+### Limitations
+
+- Unit tests do not require Ableton Live
+- Integration tests require a running Ableton Live instance with the Remote Script loaded
+- Integration testing is performed manually
 
 ---
 
-## Testing Strategy
+## Manual Testing
 
-### Manual Testing
-
-#### Prerequisites
+### Prerequisites
 
 1. Ableton Live running with Remote Script loaded
 2. MCP Server running locally
 3. Claude Desktop or Cursor connected
 
-#### Test Categories
+### Test Categories
 
 | Category | Examples |
 |----------|----------|
@@ -110,14 +128,3 @@ echo '{"type":"create_midi_track","params":{"index":-1}}' | nc localhost 9877
 # Get track info
 echo '{"type":"get_track_info","params":{"track_index":0}}' | nc localhost 9877
 ```
-
----
-
-## CI/CD Considerations
-
-For future CI/CD implementation:
-
-1. Mock Ableton Live API for unit tests
-2. Integration tests with headless Ableton (if supported)
-3. Docker-based testing environment
-4. Automated endpoint validation

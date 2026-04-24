@@ -92,5 +92,5 @@ class TrackHandler(object):
                 return "midi_effect"
             else:
                 return "unknown"
-        except:
+        except Exception:
             return "unknown"
