@@ -1,6 +1,6 @@
 # Browser helpers - shared logic for browser/preset operations
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 logger = logging.getLogger("AbletonMCPServer")
 

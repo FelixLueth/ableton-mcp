@@ -4,7 +4,6 @@ import socket
 import threading
 import json
 import time
-import traceback
 
 
 DEFAULT_PORT = 9877
@@ -54,7 +53,7 @@ class SocketServer(object):
         if self._server:
             try:
                 self._server.close()
-            except:
+            except OSError:
                 pass
 
         if self._server_thread and self._server_thread.is_alive():
@@ -144,7 +143,7 @@ class SocketServer(object):
                         client.sendall(json.dumps(error_response).encode('utf-8'))
                     except AttributeError:
                         client.sendall(json.dumps(error_response))
-                    except:
+                    except OSError:
                         break
 
                     if not isinstance(e, ValueError):
@@ -155,6 +154,6 @@ class SocketServer(object):
         finally:
             try:
                 client.close()
-            except:
+            except OSError:
                 pass
             self._log("Client handler stopped")

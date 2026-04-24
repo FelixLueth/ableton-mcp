@@ -2,7 +2,7 @@ import socket
 import json
 import logging
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -157,7 +157,7 @@ class AbletonConnectionManager:
                 logger.warning(f"Existing connection is no longer valid: {str(e)}")
                 try:
                     _connection.disconnect()
-                except:
+                except Exception:
                     pass
                 _connection = None
         
@@ -210,7 +210,7 @@ def get_ableton_connection() -> AbletonConnection:
             logger.warning(f"Existing connection is no longer valid: {str(e)}")
             try:
                 _ableton_connection.disconnect()
-            except:
+            except Exception:
                 pass
             _ableton_connection = None
     

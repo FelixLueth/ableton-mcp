@@ -42,7 +42,7 @@ class MockAbletonServer:
         if self.server_socket:
             try:
                 self.server_socket.close()
-            except:
+            except OSError:
                 pass
         if self.thread:
             self.thread.join(timeout=2.0)
