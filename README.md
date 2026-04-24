@@ -99,6 +99,27 @@ Add to your `opencode.jsonc`:
 
 ## Running
 
+### Using the Start Script
+
+The project includes a cross-platform start script that manages runtime modes:
+
+```bash
+./scripts/start.sh          # Normal mode: use published package (uvx ableton-mcp)
+./scripts/start.sh --local # Local mode: use local repository code
+./scripts/start.sh --clean # Clear uv cache and start in normal mode
+```
+
+**Mode differences:**
+
+| Mode | Command | When to use |
+|------|---------|-------------|
+| normal | `uvx ableton-mcp` | Regular users, running the published package |
+| local | `./scripts/start.sh --local` | Development, testing local changes |
+
+**Important:** `uvx ableton-mcp` may use a cached/published package and therefore may not include local uncommitted changes. Use `--local` mode for development.
+
+### Manual Running
+
 1. Start Ableton Live
 2. Start Opencode
 3. MCP server connects automatically
