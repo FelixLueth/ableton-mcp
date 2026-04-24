@@ -11,7 +11,7 @@ logger = logging.getLogger("MockAbleton")
 
 class MockAbletonServer:
     """Mock TCP server that simulates Ableton Remote Script responses"""
-    
+
     def __init__(self, host: str = "localhost", port: int = 9877):
         self.host = host
         self.port = port
@@ -19,23 +19,23 @@ class MockAbletonServer:
         self.running = False
         self.thread = None
         self.received_commands = []
-        
+
     def start(self):
         """Start the mock server"""
         if self.running:
             return
-            
+
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(1)
         self.server_socket.settimeout(5.0)
-        
+
         self.running = True
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.thread.start()
         logger.info(f"Mock Ableton server started on {self.host}:{self.port}")
-        
+
     def stop(self):
         """Stop the mock server"""
         self.running = False
@@ -47,7 +47,7 @@ class MockAbletonServer:
         if self.thread:
             self.thread.join(timeout=2.0)
         logger.info("Mock Ableton server stopped")
-        
+
     def _run(self):
         """Main server loop"""
         while self.running:
@@ -63,13 +63,13 @@ class MockAbletonServer:
             except Exception as e:
                 if self.running:
                     logger.error(f"Server error: {e}")
-                    
+
     def _handle_client(self, client_socket):
         """Handle client connection"""
         try:
             data = b""
             client_socket.settimeout(5.0)
-            
+
             while True:
                 chunk = client_socket.recv(4096)
                 if not chunk:
@@ -80,24 +80,24 @@ class MockAbletonServer:
                     break
                 except json.JSONDecodeError:
                     continue
-            
+
             if data:
                 command = json.loads(data.decode('utf-8'))
                 self.received_commands.append(command)
-                
+
                 response = self._generate_response(command)
                 client_socket.sendall(json.dumps(response).encode('utf-8'))
-                
+
         except Exception as e:
             logger.error(f"Client handler error: {e}")
         finally:
             client_socket.close()
-            
+
     def _generate_response(self, command: dict) -> dict:
         """Generate response to command"""
         cmd_type = command.get("type", "")
         params = command.get("params", {})
-        
+
         responses = {
             "get_session_info": {
                 "status": "ok",
@@ -170,7 +170,7 @@ class MockAbletonServer:
                 "result": {"loaded": True, "new_devices": ["Test Device"]}
             }
         }
-        
+
         return responses.get(cmd_type, {"status": "error", "message": f"Unknown command: {cmd_type}"})
 
 

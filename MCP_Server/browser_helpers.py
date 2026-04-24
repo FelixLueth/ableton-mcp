@@ -17,11 +17,11 @@ def format_browser_tree(result: Dict[str, Any]) -> str:
     categories = result.get("categories", [])
     if not categories:
         return "No browser items found"
-    
+
     lines = []
     for category in categories:
         lines.append(f"- {category.get('name', 'Unknown')}")
-    
+
     return "\n".join(lines)
 
 
@@ -33,12 +33,12 @@ def search_items(
     """Search items by field with partial matching"""
     query_lower = query.lower()
     results = []
-    
+
     for item in items:
         value = item.get(field, "")
         if query_lower in value.lower():
             results.append(item)
-    
+
     return results
 
 

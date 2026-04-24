@@ -16,13 +16,13 @@ from MCP_Server.browser_helpers import validate_category, BROWSER_CATEGORIES
 
 class TestConnection(unittest.TestCase):
     """Test connection module"""
-    
+
     def test_default_host(self):
         """Test default host is localhost"""
         conn = AbletonConnection(host=DEFAULT_HOST, port=DEFAULT_PORT)
         self.assertEqual(conn.host, "localhost")
         self.assertEqual(conn.port, 9877)
-    
+
     def test_connection_not_connected_initially(self):
         """Test connection starts as not connected"""
         conn = AbletonConnection(host="localhost", port=9877)
@@ -31,7 +31,7 @@ class TestConnection(unittest.TestCase):
 
 class TestClipHelpers(unittest.TestCase):
     """Test clip helpers"""
-    
+
     def test_validate_notes_valid(self):
         """Test valid notes pass validation"""
         notes = [
@@ -40,34 +40,34 @@ class TestClipHelpers(unittest.TestCase):
         ]
         valid, error = validate_notes(notes)
         self.assertTrue(valid)
-    
+
     def test_validate_notes_invalid_pitch(self):
         """Test invalid pitch fails"""
         notes = [{"pitch": 200, "start_time": 0.0, "duration": 1.0}]
         valid, error = validate_notes(notes)
         self.assertFalse(valid)
         self.assertIn("pitch", error.lower())
-    
+
     def test_validate_notes_missing_field(self):
         """Test missing required field fails"""
         notes = [{"pitch": 60}]
         valid, error = validate_notes(notes)
         self.assertFalse(valid)
         self.assertIn("field", error.lower())
-    
+
     def test_validate_notes_invalid_velocity(self):
         """Test invalid velocity fails"""
         notes = [{"pitch": 60, "start_time": 0.0, "duration": 1.0, "velocity": 200}]
         valid, error = validate_notes(notes)
         self.assertFalse(valid)
         self.assertIn("velocity", error.lower())
-    
+
     def test_drum_notes_constant(self):
         """Test drum notes are defined"""
         self.assertIn("kick", DRUM_NOTES)
         self.assertIn("snare", DRUM_NOTES)
         self.assertEqual(DRUM_NOTES["kick"], 36)
-    
+
     def test_create_drum_pattern(self):
         """Test drum pattern creation"""
         pattern = "x.|.x.|..|.."
@@ -82,13 +82,13 @@ class TestClipHelpers(unittest.TestCase):
 
 class TestBrowserHelpers(unittest.TestCase):
     """Test browser helpers"""
-    
+
     def test_validate_category_valid(self):
         """Test valid categories pass"""
         for category in BROWSER_CATEGORIES:
             self.assertTrue(validate_category(category))
         self.assertTrue(validate_category("all"))
-    
+
     def test_validate_category_invalid(self):
         """Test invalid category fails"""
         self.assertFalse(validate_category("invalid"))
